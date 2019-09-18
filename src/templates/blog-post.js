@@ -1,41 +1,46 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import { Link, graphql } from 'gatsby'
 import { MDXRenderer } from 'gatsby-plugin-mdx'
+import { MDXProvider } from '@mdx-js/react'
 
-import Bio from '../components/Bio'
 import Layout from '../components/Layout'
 import SEO from '../components/seo'
-import { rhythm, scale } from '../utils/typography'
+import MdxGallery from '../components/MdxGallery'
 
-class BlogPostTemplate extends React.Component {
-  render() {
-    const post = this.props.data.mdx
-    const siteTitle = this.props.data.site.siteMetadata.title
-    const { previous, next } = this.props.pageContext
-    console.log(this.props.pageContext)
+// any other components you want to have
+const components = {}
 
-    return (
-      <Layout location={this.props.location} title={siteTitle}>
+const BlogPostTemplate = ({ data, pageContext, location }) => {
+  const allComponents = useMemo(() => {
+    const GalleryComponent = ({ id }) => {
+      const galleries = data.mdx.frontmatter.galleries.reduce(
+        (acc, gallery) => {
+          acc[gallery.id] = gallery.images
+          return acc
+        },
+        {}
+      )
+
+      return <MdxGallery images={galleries[id]} />
+    }
+
+    return {
+      ...components,
+      Gallery: GalleryComponent,
+    }
+  }, [data])
+
+  const post = data.mdx
+  const { previous, next } = pageContext
+
+  return (
+    <Layout location={location}>
+      <MDXProvider components={allComponents}>
         <SEO title={post.frontmatter.title} description={post.excerpt} />
         <h1>{post.frontmatter.title}</h1>
-        <p
-          style={{
-            ...scale(-1 / 5),
-            display: `block`,
-            marginBottom: rhythm(1),
-            marginTop: rhythm(-1),
-          }}
-        >
-          {post.frontmatter.date}
-        </p>
+        <p>{post.frontmatter.date}</p>
         <MDXRenderer>{post.body}</MDXRenderer>
-        <hr
-          style={{
-            marginBottom: rhythm(1),
-          }}
-        />
-        <Bio />
-
+        <hr />
         <ul
           style={{
             display: `flex`,
@@ -60,27 +65,42 @@ class BlogPostTemplate extends React.Component {
             )}
           </li>
         </ul>
-      </Layout>
-    )
-  }
+      </MDXProvider>
+    </Layout>
+  )
 }
 
 export default BlogPostTemplate
 
 export const pageQuery = graphql`
   query($slug: String!) {
-    site {
-      siteMetadata {
-        title
-        author
-      }
-    }
     mdx(fields: { slug: { eq: $slug } }) {
       id
       excerpt(pruneLength: 160)
       frontmatter {
         title
         date(formatString: "MMMM DD, YYYY")
+        galleries {
+          id
+          images {
+            title
+            description
+            src {
+              childImageSharp {
+                preview: fluid(
+                  maxWidth: 200
+                  maxHeight: 200
+                  cropFocus: ATTENTION
+                ) {
+                  ...GatsbyImageSharpFluid
+                }
+                big: fluid(maxWidth: 1200) {
+                  ...GatsbyImageSharpFluid
+                }
+              }
+            }
+          }
+        }
       }
       body
     }
