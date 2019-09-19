@@ -12,7 +12,7 @@ const components = {}
 
 const BlogPostTemplate = ({ data, pageContext, location }) => {
   const allComponents = useMemo(() => {
-    const GalleryComponent = ({ id }) => {
+    const GalleryComponent = ({ id, ...props }) => {
       const galleries = data.mdx.frontmatter.galleries.reduce(
         (acc, gallery) => {
           acc[gallery.id] = gallery.images
@@ -21,7 +21,7 @@ const BlogPostTemplate = ({ data, pageContext, location }) => {
         {}
       )
 
-      return <MdxGallery images={galleries[id]} />
+      return <MdxGallery images={galleries[id]} {...props} />
     }
 
     return {
