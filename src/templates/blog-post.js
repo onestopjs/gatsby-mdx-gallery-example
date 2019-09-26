@@ -12,11 +12,15 @@ const components = {}
 
 const BlogPostTemplate = ({ data, pageContext, location }) => {
   const allComponents = useMemo(() => {
-    const galleries = data.mdx.frontmatter.galleries.reduce((acc, gallery) => {
-      acc[gallery.id] = gallery.images
-      return acc
-    }, {})
     const GalleryComponent = ({ id, ...props }) => {
+      const galleries = data.mdx.frontmatter.galleries.reduce(
+        (acc, gallery) => {
+          acc[gallery.id] = gallery.images
+          return acc
+        },
+        {}
+      )
+
       return <MdxGallery images={galleries[id]} {...props} />
     }
 
